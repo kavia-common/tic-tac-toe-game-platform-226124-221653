@@ -84,23 +84,23 @@ export default function GameBoard() {
   }
 
   // PUBLIC_INTERFACE
-  async function safePostMove(gId, position) {
+  async function safePostMove(gId, position, localBoard, localPlayer) {
     /** Attempt to post a move and return updated game state; fallback to local compute. */
     try {
       const updated = await api.postMove(gId, position);
       return updated;
     } catch (e) {
-      // compute locally
-      const nextBoard = [...board];
+      // compute locally using latest provided state to avoid stale closures
+      const nextBoard = [...localBoard];
       if (nextBoard[position]) {
         return {
           id: gId,
           board: nextBoard,
-          currentPlayer,
+          currentPlayer: localPlayer,
           status: status.state,
         };
       }
-      nextBoard[position] = currentPlayer;
+      nextBoard[position] = localPlayer;
       const outcome = checkWinner(nextBoard);
       let newStatus = 'in-progress';
       let winner = null;
@@ -109,10 +109,14 @@ export default function GameBoard() {
         newStatus = 'won';
         winner = outcome;
       }
+      // When game continues, flip player; otherwise keep same
+      const nextPlayer =
+        newStatus === 'in-progress' ? (localPlayer === 'X' ? 'O' : 'X') : localPlayer;
+
       return {
         id: gId,
         board: nextBoard,
-        currentPlayer: winner || newStatus === 'draw' ? currentPlayer : currentPlayer === 'X' ? 'O' : 'X',
+        currentPlayer: nextPlayer,
         status: newStatus,
         winner,
       };
@@ -169,46 +173,56 @@ export default function GameBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSquareClick = async (index) => {
-    if (isBusy) return;
-    if (status.state === 'won' || status.state === 'draw') return;
-    if (board[index]) return;
+  const handleSquareClick = useCallback(
+    async (index) => {
+      if (isBusy) return;
+      if (status.state === 'won' || status.state === 'draw') return;
 
-    setIsBusy(true);
-    setError(null);
-    try {
-      const updated = await safePostMove(gameId, index);
+      // Use functional update to avoid stale board/currentPlayer reads
+      setError(null);
+      setIsBusy(true);
 
-      // If backend returns canonical shape, prefer it; otherwise rely on fallback shape
-      const nextBoard = updated.board || board;
-      const nextStatus = updated.status || 'in-progress';
-      const nextWinner = updated.winner || null;
+      try {
+        // Snapshot current values to pass into safePostMove to avoid closure staleness
+        const snapshotBoard = [...board];
+        const snapshotPlayer = currentPlayer;
 
-      // If backend didn't send next player, compute it locally
-      let nextPlayer = updated.currentPlayer;
-      if (!nextPlayer) {
-        if (nextStatus === 'in-progress') {
-          nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        } else {
-          nextPlayer = currentPlayer;
+        if (snapshotBoard[index]) {
+          return; // ignore clicks on filled cell
         }
+
+        const updated = await safePostMove(gameId, index, snapshotBoard, snapshotPlayer);
+
+        // Prefer backend shape; otherwise, use computed
+        const nextBoard = updated.board || snapshotBoard;
+        const nextStatus = updated.status || 'in-progress';
+        const nextWinner = updated.winner || null;
+
+        // Derive next player safely if backend omitted it
+        let nextPlayer = updated.currentPlayer;
+        if (!nextPlayer) {
+          nextPlayer =
+            nextStatus === 'in-progress'
+              ? snapshotPlayer === 'X' ? 'O' : 'X'
+              : snapshotPlayer;
+        }
+
+        setBoard(nextBoard);
+        setCurrentPlayer(nextPlayer);
+        setStatus({ state: nextStatus, winner: nextWinner });
+
+        setMoves((prev) => [
+          ...prev,
+          { moveNumber: prev.length + 1, player: snapshotPlayer, position: index },
+        ]);
+      } catch (e) {
+        setError(e);
+      } finally {
+        setIsBusy(false);
       }
-
-      setBoard(nextBoard);
-      setCurrentPlayer(nextPlayer);
-      setStatus({ state: nextStatus, winner: nextWinner });
-
-      // Update local move list
-      setMoves((prev) => [
-        ...prev,
-        { moveNumber: prev.length + 1, player: currentPlayer, position: index },
-      ]);
-    } catch (e) {
-      setError(e);
-    } finally {
-      setIsBusy(false);
-    }
-  };
+    },
+    [board, currentPlayer, gameId, isBusy, status.state, safePostMove]
+  );
 
   const resetGame = async () => {
     if (isBusy) return;
@@ -256,7 +270,7 @@ export default function GameBoard() {
 
   return (
     <div className="surface-card board-wrapper" aria-label="Tic Tac Toe board area">
-      <div className="board-header" style={{ width: '100%', maxWidth: '520px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="board-header" style={{ width: '100%', maxWidth: '520px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
         <div
           className={`kicker ${status.state === 'won' ? 'winner' : status.state === 'draw' ? 'draw' : ''}`}
           role="status"
@@ -292,7 +306,7 @@ export default function GameBoard() {
             key={idx}
             index={idx}
             value={board[idx]}
-            onClick={() => handleSquareClick(idx)}
+            onClick={handleSquareClick}
             disabled={boardDisabled || Boolean(board[idx])}
           />
         ))}

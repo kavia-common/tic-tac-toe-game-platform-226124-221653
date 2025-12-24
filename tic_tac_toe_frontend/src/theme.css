@@ -137,6 +137,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+  touch-action: manipulation; /* improve mobile tap responsiveness */
 }
 
 /* Board header */

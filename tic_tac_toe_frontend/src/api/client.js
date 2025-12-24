@@ -185,6 +185,14 @@ export async function getLeaderboard() {
   return request('/leaderboard', { method: 'GET' });
 }
 
+/** Non-blocking error surfacing helper (no-op placeholder). Components can choose to use this. */
+function logNonBlockingError(err) {
+  if (process.env.NODE_ENV !== 'test') {
+    // eslint-disable-next-line no-console
+    console.warn('[api] non-blocking error:', err?.message || err);
+  }
+}
+
 // PUBLIC_INTERFACE
 export const api = {
   /** Aggregated API helpers for convenient named import. */
@@ -199,6 +207,7 @@ export const api = {
   setLoading,
   setSuccess,
   setError,
+  logNonBlockingError,
 };
 
 export default api;

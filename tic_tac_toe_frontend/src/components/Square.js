@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 /**
  * PUBLIC_INTERFACE
@@ -6,6 +6,13 @@ import React from 'react';
  * It renders as a button for accessibility and handles disabled states.
  */
 export default function Square({ value, onClick, disabled, index }) {
+  /** Ensure a stable click handler to avoid re-renders swallowing clicks on some browsers. */
+  const handleClick = useCallback(() => {
+    if (!disabled && typeof onClick === 'function') {
+      onClick(index);
+    }
+  }, [disabled, onClick, index]);
+
   const ariaLabel = value
     ? `Cell ${index + 1}, contains ${value}`
     : `Cell ${index + 1}, empty`;
@@ -19,7 +26,8 @@ export default function Square({ value, onClick, disabled, index }) {
       aria-label={ariaLabel}
       aria-disabled={disabled}
       disabled={disabled}
-      onClick={onClick}
+      onClick={handleClick}
+      data-testid={`cell-${index}`}
     >
       {hasValue ? value : ''}
     </button>
