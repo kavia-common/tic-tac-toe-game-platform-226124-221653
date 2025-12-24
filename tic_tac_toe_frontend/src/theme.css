@@ -139,6 +139,46 @@ body {
   gap: 12px;
 }
 
+/* Board header */
+.board-header .kicker.winner {
+  color: var(--color-secondary);
+}
+.board-header .kicker.draw {
+  color: var(--color-text);
+}
+
+/* Move list */
+.move-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.move-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(17,24,39,0.82);
+}
+.move-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+}
+.move-text {
+  line-height: 1.4;
+}
+
+/* Empty state styling for cells */
+.cell-empty {
+  opacity: .9;
+}
+
 .cell {
   background: linear-gradient(180deg, #fff, #f9fafb);
   border: 1px solid rgba(17,24,39,0.06);
