@@ -218,6 +218,18 @@ body {
   padding: 16px;
 }
 
+.sidebar-card .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 .sidebar-title {
   margin: 0 0 10px 0;
   font-size: 14px;

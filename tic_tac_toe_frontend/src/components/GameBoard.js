@@ -139,6 +139,13 @@ export default function GameBoard() {
         setCurrentPlayer(g.currentPlayer || 'X');
         setStatus({ state: g.status || 'in-progress', winner: g.winner || null });
         setMoves([]);
+        // Notify sidebar about the active game change
+        try {
+          const evt = new CustomEvent('active-game-changed', { detail: { gameId: g.id } });
+          window.dispatchEvent(evt);
+        } catch {
+          // ignore if CustomEvent is not available
+        }
       } catch (e) {
         if (!mounted) return;
         setError(e);
@@ -210,6 +217,12 @@ export default function GameBoard() {
       setCurrentPlayer(g.currentPlayer || 'X');
       setStatus({ state: g.status || 'in-progress', winner: g.winner || null });
       setMoves([]);
+      try {
+        const evt = new CustomEvent('active-game-changed', { detail: { gameId: g.id } });
+        window.dispatchEvent(evt);
+      } catch {
+        // ignore
+      }
     } catch (e) {
       // As a last resort, local reset
       setBoard(Array(9).fill(null));
