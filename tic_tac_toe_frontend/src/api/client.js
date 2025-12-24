@@ -1,25 +1,29 @@
 //
+//
 // Centralized API client for Tic Tac Toe Frontend
-// - Reads base URL from REACT_APP_API_BASE_URL with a default fallback
+// - Reads base URL from REACT_APP_API_BASE or REACT_APP_BACKEND_URL (with a default fallback)
 // - Provides helper methods for common backend endpoints
 // - Includes basic error handling and loading helpers
 //
 
 /**
  * Resolve the API base URL from environment variables, defaulting
- * to http://localhost:3001 if REACT_APP_API_BASE_URL is not set.
+ * to http://localhost:3001 if none is set. Uses either REACT_APP_API_BASE
+ * or REACT_APP_BACKEND_URL as requested. Maintains compatibility with
+ * REACT_APP_API_BASE_URL from the template README.
  */
 const DEFAULT_API_BASE_URL = 'http://localhost:3001';
 
 // PUBLIC_INTERFACE
 export function getApiBaseUrl() {
   /** Returns the API base URL resolved from the environment. */
-  const envUrl = process.env.REACT_APP_API_BASE_URL
-    || process.env.REACT_APP_BACKEND_URL
-    || process.env.REACT_APP_API_BASE
-    || '';
+  const envUrl =
+    process.env.REACT_APP_API_BASE ||
+    process.env.REACT_APP_BACKEND_URL ||
+    process.env.REACT_APP_API_BASE_URL ||
+    '';
   // Normalize trailing slash: do not end with '/'
-  const finalBase = (envUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
+  const finalBase = (envUrl || DEFAULT_API_BASE_URL).replace(/\/*$/, '');
   return finalBase;
 }
 
@@ -34,6 +38,7 @@ function buildUrl(path) {
 
 /**
  * Basic wrapper around fetch with JSON handling and error normalization.
+ * If the request fails due to network/unreachable backend, we surface a clear error.
  */
 async function request(path, options = {}) {
   const url = buildUrl(path);
@@ -78,7 +83,7 @@ async function request(path, options = {}) {
       return null;
     }
   } catch (error) {
-    // Attach URL for easier debugging
+    // Attach URL for easier debugging and rethrow
     if (!error.requestUrl) error.requestUrl = url;
     throw error;
   }

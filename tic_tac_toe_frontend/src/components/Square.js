@@ -10,16 +10,18 @@ export default function Square({ value, onClick, disabled, index }) {
     ? `Cell ${index + 1}, contains ${value}`
     : `Cell ${index + 1}, empty`;
 
+  const hasValue = value === 'X' || value === 'O';
+
   return (
     <button
       type="button"
-      className={`cell ${!value ? 'cell-empty' : ''}`}
+      className={`cell ${!hasValue ? 'cell-empty' : ''}`}
       aria-label={ariaLabel}
       aria-disabled={disabled}
       disabled={disabled}
       onClick={onClick}
     >
-      {value || ''}
+      {hasValue ? value : ''}
     </button>
   );
 }

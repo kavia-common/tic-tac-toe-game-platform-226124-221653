@@ -119,9 +119,10 @@ export default function GameBoard() {
     }
   }
 
-  // Start a new game on mount
+  // Start a new game on mount and when receiving "new-game" events
   useEffect(() => {
     let mounted = true;
+
     async function init() {
       setIsBusy(true);
       setError(null);
@@ -153,9 +154,17 @@ export default function GameBoard() {
         if (mounted) setIsBusy(false);
       }
     }
+
+    // initial run
     init();
+
+    // listen for navbar new game
+    const onNewGame = () => init();
+    window.addEventListener('new-game', onNewGame);
+
     return () => {
       mounted = false;
+      window.removeEventListener('new-game', onNewGame);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
