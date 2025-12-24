@@ -27,6 +27,19 @@ Launches the test runner in interactive watch mode.
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
+## API Client and Environment Configuration
+
+- The frontend reads the backend URL from `REACT_APP_API_BASE_URL`. If not set, it defaults to `http://localhost:3001`.
+- Copy `.env.example` to `.env` and adjust as needed:
+  ```
+  REACT_APP_API_BASE_URL=http://localhost:3001
+  ```
+- You can import the API client anywhere in the app:
+  ```js
+  import { api } from './src/api';
+  // api.createPlayer('Alice'), api.createGame(xId, oId), api.getGame(id), api.postMove(id, pos), api.getHistory(id), api.getLeaderboard()
+  ```
+
 ## Customization
 
 ### Colors

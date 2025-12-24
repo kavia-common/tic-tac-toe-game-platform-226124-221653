@@ -1,4 +1,7 @@
 import React from 'react';
+// Wire the API client to be available for future use without altering UI yet
+// eslint-disable-next-line no-unused-vars
+import { api } from '../api';
 
 /**
  * PUBLIC_INTERFACE
